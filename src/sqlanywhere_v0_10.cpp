@@ -825,7 +825,7 @@ Handle<Value> Connection::connect( const Arguments &args )
 	    baton->conn_string.append(*param0);
 	    arg_string.Dispose();
 	}
-	baton->conn_string.append( ";CHARSET='UTF-8'" );
+	baton->conn_string.append( ";CHARSET='UTF8'" );
     }
     
     uv_work_t *req = new uv_work_t();

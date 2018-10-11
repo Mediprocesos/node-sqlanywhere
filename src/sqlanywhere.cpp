@@ -880,7 +880,7 @@ NODE_API_FUNC( Connection::connect )
 	    baton->conn_string.append(*param0);
 	    arg_string.Reset();
 	}
-	baton->conn_string.append( ";CHARSET='UTF-8'" );
+	baton->conn_string.append( ";CHARSET='UTF8'" );
     }
     
     uv_work_t *req = new uv_work_t();
