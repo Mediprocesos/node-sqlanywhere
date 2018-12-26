@@ -120,9 +120,10 @@ void callBack( std::string *		str,
 #else
         TryCatch try_catch( isolate );
 #endif
+
 	//local_callback->Call( isolate->GetCurrentContext()->Global(), argc, argv );
-	Nan::Callback *cb = new Nan::Callback(local_callback);
-	cb->Call(argc, argv);
+    Nan::Callback *cb = new Nan::Callback( local_callback );
+	cb->Call( argc, argv );
 	if( try_catch.HasCaught()) {
 	    node::FatalException( isolate, try_catch );
 	}
@@ -180,9 +181,11 @@ void callBack( std::string *		str,
 #else
         TryCatch try_catch( isolate );
 #endif
+
 	//callback->Call( isolate->GetCurrentContext()->Global(), argc, argv );
-	Nan::Callback *cb = new Nan::Callback(callback);
-	cb->Call(argc, argv);
+    Nan::Callback *cb = new Nan::Callback( callback );
+    cb->Call( argc, argv );
+
 	if( try_catch.HasCaught()) {
 	    node::FatalException( isolate, try_catch );
 	}
