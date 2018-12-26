@@ -3,7 +3,7 @@
 // ***************************************************************************
 #include "nodever_cover.h"
 #include "sqlany_utils.h"
-#include <nan.h>
+#include "nan.h"
 
 #if !v010
 
