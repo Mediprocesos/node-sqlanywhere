@@ -1,5 +1,5 @@
 // ***************************************************************************
-// Copyright (c) 2018 SAP SE or an SAP affiliate company. All rights reserved.
+// Copyright (c) 2021 SAP SE or an SAP affiliate company. All rights reserved.
 // ***************************************************************************
 #include "nodever_cover.h"
 #include "sqlany_utils.h"
@@ -225,7 +225,7 @@ NODE_API_FUNC( StmtObject::exec )
     baton->callback_required = callback_required;
 
     if( bind_required ) {
-	if( !getBindParameters( baton->execData, args[0], baton->params,
+        if( !getBindParameters( baton->execData, isolate, args[0], baton->params,
 				baton->num_rows ) ) {
 	    delete baton;
 	    std::string error_msg;
@@ -412,6 +412,7 @@ NODE_API_FUNC( Connection::exec )
 /*******************************/
 {
     Isolate *isolate = args.GetIsolate();
+    Local<Context> context = isolate->GetCurrentContext();
     HandleScope scope( isolate );
     Local<Value> undef = Local<Value>::New( isolate, Undefined( isolate ) );
 
@@ -454,8 +455,12 @@ NODE_API_FUNC( Connection::exec )
 	return;
     }
     
-    String::Utf8Value 		param0( args[0]->ToString() );
-    
+#if NODE_MAJOR_VERSION >= 12
+    String::Utf8Value param0( isolate, (args[0]->ToString(context)).ToLocalChecked() );
+#else
+    String::Utf8Value param0( (args[0]->ToString(context)).ToLocalChecked() );
+#endif
+
     executeBaton *baton = new executeBaton();
     baton->obj = obj;
     baton->callback_required = callback_required;
@@ -464,7 +469,7 @@ NODE_API_FUNC( Connection::exec )
     baton->stmt = std::string(*param0);
 
     if( bind_required ) {
-	if( !getBindParameters( baton->execData, args[1], baton->params,
+        if( !getBindParameters( baton->execData, isolate, args[1], baton->params,
 				baton->num_rows ) ) {
 	    delete baton;
 	    std::string error_msg;
@@ -596,6 +601,7 @@ NODE_API_FUNC( Connection::prepare )
 /**********************************/
 {
     Isolate *isolate = args.GetIsolate();
+    Local<Context> context = isolate->GetCurrentContext();
     HandleScope scope( isolate );
     bool callback_required = false;
     int cbfunc_arg = -1;
@@ -641,8 +647,12 @@ NODE_API_FUNC( Connection::prepare )
 	return;
     }
     
-    String::Utf8Value 		param0( args[0]->ToString() );
-    
+#if NODE_MAJOR_VERSION >= 12
+    String::Utf8Value param0( isolate, (args[0]->ToString(context)).ToLocalChecked() );
+#else
+    String::Utf8Value param0( (args[0]->ToString(context)).ToLocalChecked() );
+#endif
+
     prepareBaton *baton = new prepareBaton();
     baton->obj = obj;
     baton->callback_required = callback_required;    
@@ -797,6 +807,7 @@ NODE_API_FUNC( Connection::connect )
 /**********************************/
 {
     Isolate *isolate = args.GetIsolate();
+    Local<Context> context = isolate->GetCurrentContext();
     HandleScope scope( isolate );
     int		num_args = args.Length();
     Connection *obj;
@@ -856,27 +867,39 @@ NODE_API_FUNC( Connection::connect )
     baton->sqlca_connection = sqlca_connection;
     
     if( sqlca_connection ) {
-	baton->sqlca = (void *)(long)args[0]->NumberValue();
+        baton->sqlca = (void *)(long)(args[0]->NumberValue(context)).FromJust();
 	
     } else {
 	Local<String> localArg = Local<String>::New( isolate, obj->_arg );
 	if( localArg->Length() > 0 ) {
-	    String::Utf8Value param0( localArg );
+#if NODE_MAJOR_VERSION >= 12
+            String::Utf8Value param0( isolate, localArg );
+#else
+            String::Utf8Value param0( localArg );
+#endif
 	    baton->conn_string = std::string(*param0);
 	} else {
 	    baton->conn_string = std::string();
 	}
 	if( arg_is_string ) {
-	    String::Utf8Value param0( args[0]->ToString() );
+#if NODE_MAJOR_VERSION >= 12
+            String::Utf8Value param0( isolate, (args[0]->ToString(context)).ToLocalChecked());
+#else
+            String::Utf8Value param0( (args[0]->ToString(context)).ToLocalChecked() );
+#endif
 	    baton->conn_string.append( ";" );
 	    baton->conn_string.append(*param0);
 	} else if( arg_is_object ) {
 	    Persistent<String> arg_string;
-	    HashToString( args[0]->ToObject(), arg_string );
+            HashToString( isolate, args[0]->ToObject(isolate), arg_string );
 	    Local<String> local_arg_string = 
 		Local<String>::New( isolate, arg_string );
-	    String::Utf8Value param0( local_arg_string );
-	    baton->conn_string.append( ";" );
+#if NODE_MAJOR_VERSION >= 12
+            String::Utf8Value param0( isolate, local_arg_string );
+#else
+            String::Utf8Value param0( local_arg_string );
+#endif
+            baton->conn_string.append( ";" );
 	    baton->conn_string.append(*param0);
 	    arg_string.Reset();
 	}
